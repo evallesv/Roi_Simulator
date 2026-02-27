@@ -177,7 +177,15 @@
     .glow{animation:borderGlow 3s ease infinite}
 
     /* ── Sticky side panel ── */
-    .side-sticky{position:sticky;top:1.5rem}
+    .side-sticky{position:static}
+
+    /* ── Typeform-like wizard ── */
+    .wizard-progress{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+    .wizard-progress .fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s ease}
+    .form-step{display:none}
+    .form-step.active{display:block}
+    .wizard-nav{display:flex;gap:.75rem;justify-content:space-between;align-items:center;flex-wrap:wrap}
+    .wizard-title{font-size:.82rem;color:var(--muted)}
 
     /* ── Live panel mini numbers ── */
     .live-box{background:#f8fafc;border:1px solid var(--border);border-radius:.65rem;padding:.85rem}
@@ -275,10 +283,10 @@
      MAIN FORM
 ═══════════════════════════════════════════════════ -->
 <main class="container py-5">
-  <div class="row g-4">
+  <div class="row g-4 justify-content-center">
 
     <!-- ─── LEFT: Form ─── -->
-    <div class="col-lg-7">
+    <div class="col-xl-8 col-lg-9">
 
       <!-- ── COMPANY PROFILE PRESETS ── -->
       <div class="card p-4 mb-4 no-print">
@@ -314,8 +322,16 @@
         </div>
       </div>
 
+      <div class="card p-4 mb-4 no-print">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="section-label mb-0">Experiencia guiada</div>
+          <div class="wizard-title" id="wizardStepLabel">Paso 1 de 6</div>
+        </div>
+        <div class="wizard-progress"><div class="fill" id="wizardProgressFill" style="width:16.6%"></div></div>
+      </div>
+
       <!-- ── STEP 1: AUTOMATION LEVEL ── -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 form-step active" data-step="1">
         <div class="d-flex align-items-center gap-3 mb-3">
           <div class="card-icon ci-blue"><i class="bi bi-gear-wide-connected"></i></div>
           <div>
@@ -352,7 +368,7 @@
       </div>
 
       <!-- ── STEP 2: TIME-BASED CALCULATION (DocuWare-style) ── -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 form-step" data-step="2">
         <div class="d-flex align-items-center gap-3 mb-3">
           <div class="card-icon ci-amber"><i class="bi bi-person-badge"></i></div>
           <div>
@@ -484,7 +500,7 @@
       </div>
 
       <!-- ── STEP 3: ACQUISITION COSTS ── -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 form-step" data-step="3">
         <div class="d-flex align-items-center gap-3 mb-3">
           <div class="card-icon ci-purple"><i class="bi bi-currency-dollar"></i></div>
           <div>
@@ -539,7 +555,7 @@
       </div>
 
       <!-- ── STEP 4: OPERATIONAL COSTS ── -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 form-step" data-step="4">
         <div class="d-flex align-items-center gap-3 mb-3">
           <div class="card-icon ci-sky"><i class="bi bi-graph-up-arrow"></i></div>
           <div>
@@ -596,7 +612,7 @@
       </div>
 
       <!-- ── STEP 5: ERROR COSTS ── -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 form-step" data-step="5">
         <div class="d-flex align-items-center gap-3 mb-3">
           <div class="card-icon ci-red"><i class="bi bi-exclamation-triangle-fill"></i></div>
           <div>
@@ -656,12 +672,12 @@
       </div>
 
       <!-- ── STEP 6: PROJECT CONFIG ── -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 form-step" data-step="6">
         <div class="d-flex align-items-center gap-3 mb-3">
           <div class="card-icon ci-green"><i class="bi bi-calendar3"></i></div>
           <div>
             <div class="section-label">Paso 6</div>
-            <h5 class="mb-0 fw-bold">Configuración del Análisis</h5>
+            <h5 class="mb-0 fw-bold">Configuración del Análisis y Modelo de Infraestructura</h5>
           </div>
         </div>
         <div class="row g-3">
@@ -676,9 +692,7 @@
             </select>
           </div>
           <div class="col-sm-6">
-            <label class="form-label">Tasa de descuento (WACC)
-              <span class="hi" title="Tasa para calcular el VPN. Típico: 8-12% para proyectos de TI.">?</span>
-            </label>
+            <label class="form-label">Tasa de descuento (WACC)</label>
             <div class="input-group">
               <input type="number" class="form-control" id="cfg_discount" value="8" min="0" max="50" step="0.5" />
               <span class="input-group-text">%</span>
@@ -704,36 +718,66 @@
             </select>
           </div>
           <div class="col-sm-6">
-            <label class="form-label">Costo anual de mantenimiento del sistema (% inversión)
-              <span class="hi" title="Costo recurrente anual del sistema como % de la inversión inicial. Típico: 15–20% para soluciones SaaS/ECM.">?</span>
-            </label>
+            <label class="form-label">Modalidad de despliegue</label>
+            <select class="form-select" id="cfg_deploy" onchange="toggleInfraFields()">
+              <option value="cloud" selected>Nube (suscripción)</option>
+              <option value="onprem">On-Premise</option>
+            </select>
+          </div>
+          <div class="col-sm-6 infra-cloud">
+            <label class="form-label">Cobro en nube</label>
+            <select class="form-select" id="cfg_cloud_cycle">
+              <option value="monthly" selected>Mensual</option>
+              <option value="annual">Anual</option>
+            </select>
+          </div>
+          <div class="col-sm-6 infra-cloud">
+            <label class="form-label">Valor de suscripción en nube</label>
             <div class="input-group">
-              <input type="number" class="form-control" id="cfg_maint" value="15" min="0" max="50" step="1" />
-              <span class="input-group-text">%</span>
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="cfg_cloud_fee" value="2500" min="0" step="100" />
             </div>
           </div>
+          <div class="col-sm-6 infra-onprem" style="display:none">
+            <label class="form-label">Mantenimiento on-premise</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="cfg_maint" value="20" readonly />
+              <span class="input-group-text">% anual fijo</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Actions -->
-      <div class="d-flex gap-3 flex-wrap no-print">
-        <button class="btn-calc" onclick="calcROI()">
-          <i class="bi bi-calculator-fill me-2"></i>Calcular ROI
-        </button>
-        <button class="btn-reset" onclick="resetForm()">
-          <i class="bi bi-arrow-counterclockwise me-2"></i>Restablecer
-        </button>
+      <div class="card p-4 no-print">
+        <div class="wizard-nav">
+          <button class="btn btn-outline-secondary" id="btnPrevStep" type="button" onclick="goStep(-1)">
+            <i class="bi bi-arrow-left me-1"></i>Anterior
+          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" id="btnNextStep" type="button" onclick="goStep(1)">
+              Siguiente<i class="bi bi-arrow-right ms-1"></i>
+            </button>
+            <button class="btn-calc" id="btnCalcNow" type="button" onclick="calcROI()" style="display:none">
+              <i class="bi bi-calculator-fill me-2"></i>Calcular ROI
+            </button>
+            <button class="btn-reset" type="button" onclick="resetForm()">
+              <i class="bi bi-arrow-counterclockwise me-2"></i>Restablecer
+            </button>
+          </div>
+        </div>
       </div>
     </div><!-- /left -->
 
     <!-- ─── RIGHT: Live summary ─── -->
-    <div class="col-lg-5 no-print">
+    <div class="col-xl-8 col-lg-9 no-print">
       <div class="side-sticky">
         <div class="card p-4 mb-3">
           <div class="d-flex align-items-center gap-3 mb-3">
             <div class="card-icon ci-green"><i class="bi bi-speedometer2"></i></div>
             <div>
-              <h6 class="mb-0 fw-bold">Resumen en Tiempo Real</h6>
-              <small class="text-muted">Se actualiza automáticamente</small>
+              <h6 class="mb-0 fw-bold">Resumen de Entradas en Tiempo Real</h6>
+              <small class="text-muted">Vista previa antes de calcular resultados</small>
             </div>
           </div>
           <div class="row g-2 mb-3">
@@ -761,6 +805,12 @@
                 <div class="lv text-danger" id="lv_errors">$69,000</div>
               </div>
             </div>
+            <div class="col-6">
+              <div class="live-box">
+                <div class="ll">Costo Recurrente Infra</div>
+                <div class="lv text-dark" id="lv_recurring">—</div>
+              </div>
+            </div>
             <div class="col-12">
               <div class="live-box" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#6ee7b7">
                 <div class="ll">Ahorro Potencial Anual Estimado</div>
@@ -778,7 +828,7 @@
 
         <!-- Insights -->
         <div class="card p-4">
-          <p class="small fw-bold mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Beneficios esperados:</p>
+          <p class="small fw-bold mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Supuestos por nivel de automatización:</p>
           <ul class="list-unstyled small mb-0" id="insightsList"></ul>
         </div>
       </div>
@@ -867,7 +917,7 @@
             <tr>
               <th>Año</th>
               <th>Ahorro Bruto</th>
-              <th>Mant. Sistema</th>
+              <th>Costo Recurrente</th>
               <th>Beneficio Neto</th>
               <th>Flujo Acumulado</th>
               <th>Estado</th>
@@ -980,6 +1030,8 @@ const PRESETS = {
 };
 
 let autoLevel = 'low';
+let currentStep = 1;
+const totalSteps = 6;
 let donutInst = null, cashflowInst = null, savingsInst = null;
 
 /* ────────────────────────────────────────────────────
@@ -990,6 +1042,7 @@ const num = id => parseFloat($(id).value) || 0;
 const curr = () => CURR[$('cfg_currency').value] || '$';
 const fmt = n => curr() + Math.round(n).toLocaleString('es');
 const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+const calcReductionPct = (before, saving) => before > 0 ? (saving / before) * 100 : 0;
 
 function syncVal(rangeId, labelId, formatter) {
   $(labelId).textContent = formatter($(rangeId).value);
@@ -1101,18 +1154,54 @@ function calcAnnualSavings(t) {
   );
 }
 
+function getAnnualRecurringCost(invest) {
+  const deploy = $('cfg_deploy').value;
+  if (deploy === 'onprem') return invest * 0.20;
+
+  const cycle = $('cfg_cloud_cycle').value;
+  const fee = num('cfg_cloud_fee');
+  return cycle === 'monthly' ? fee * 12 : fee;
+}
+
+function toggleInfraFields() {
+  const isCloud = $('cfg_deploy').value === 'cloud';
+  document.querySelectorAll('.infra-cloud').forEach(el => { el.style.display = isCloud ? '' : 'none'; });
+  document.querySelectorAll('.infra-onprem').forEach(el => { el.style.display = isCloud ? 'none' : ''; });
+  updateLive();
+}
+
+function updateWizardUI() {
+  document.querySelectorAll('.form-step').forEach(card => {
+    card.classList.toggle('active', Number(card.dataset.step) === currentStep);
+  });
+
+  $('wizardStepLabel').textContent = `Paso ${currentStep} de ${totalSteps}`;
+  $('wizardProgressFill').style.width = `${(currentStep / totalSteps) * 100}%`;
+  $('btnPrevStep').disabled = currentStep === 1;
+  $('btnNextStep').style.display = currentStep === totalSteps ? 'none' : '';
+  $('btnCalcNow').style.display = currentStep === totalSteps ? '' : 'none';
+}
+
+function goStep(delta) {
+  currentStep = Math.min(totalSteps, Math.max(1, currentStep + delta));
+  updateWizardUI();
+  window.scrollTo({ top: 220, behavior: 'smooth' });
+}
+
 /* ────────────────────────────────────────────────────
    LIVE PANEL
 ──────────────────────────────────────────────────── */
 function updateLive() {
   const t = getTotals();
   const savings = calcAnnualSavings(t);
+  const recurring = getAnnualRecurringCost(t.invest);
 
   $('lv_invest').textContent  = fmt(t.invest);
   $('lv_opcost').textContent  = fmt(t.opTotal);
   $('lv_timecost').textContent= fmt(t.timeCost);
   $('lv_errors').textContent  = fmt(t.errTotal);
-  $('lv_savings').textContent = fmt(savings);
+  $('lv_recurring').textContent = fmt(recurring);
+  $('lv_savings').textContent = fmt(Math.max(savings - recurring, 0));
 
   // Donut
   const labels = ['Personal','Almacenamiento','Insumos','Búsqueda','Vencimientos','Cumplimiento','Errores doc.','Errores op.','Tiempo (IDC)'];
@@ -1145,8 +1234,9 @@ function calcROI() {
   const years   = parseInt($('cfg_years').value);
   const disc    = num('cfg_discount') / 100;
   const growth  = num('cfg_growth') / 100;
-  const maintRate = num('cfg_maint') / 100;
   const invest  = t.invest;
+  const recurringBase = getAnnualRecurringCost(invest);
+  const deployMode = $('cfg_deploy').value;
 
   // Annual savings per category (for before/after table)
   const savPerCat = {
@@ -1173,14 +1263,14 @@ function calcROI() {
   for (let y = 1; y <= years; y++) {
     const gf = Math.pow(1 + growth, y - 1);
     const gross = totalAnnualSavings * gf;
-    const maint = invest * maintRate * gf;   // configurable annual maintenance %
-    const net   = gross - maint;
+    const recurring = recurringBase * gf;
+    const net   = gross - recurring;
     const discounted = net / Math.pow(1 + disc, y);
     npv          += discounted;
     totalSavings += gross;
     cumulative   += net;
     if (paybackYear === null && cumulative >= 0) paybackYear = y;
-    rows.push({ y, gross, maint, net, cumulative });
+    rows.push({ y, gross, recurring, net, cumulative });
   }
 
   const roi = invest > 0 ? ((totalSavings - invest) / invest) * 100 : 0;
@@ -1198,40 +1288,48 @@ function calcROI() {
   $('timelineFill').style.width = pct + '%';
   $('paybackLabel').textContent = paybackYear ? 'Payback: Año ' + paybackYear : 'No alcanzado en el período';
   $('paybackNote').textContent = paybackYear
-    ? `La inversión se recupera en el año ${paybackYear}. El beneficio neto proyectado para ese año es ${fmt(rows[paybackYear-1].net)}.`
+    ? `La inversión se recupera en el año ${paybackYear}. Incluye costos recurrentes de ${deployMode === 'onprem' ? 'mantenimiento on-premise (20%)' : 'suscripción en nube'}. El beneficio neto proyectado para ese año es ${fmt(rows[paybackYear-1].net)}.`
     : `Con los datos actuales la inversión no se recupera en ${years} años. Considere ampliar el alcance o reducir costos de adquisición.`;
 
   // ── Before / After table ──
   const BA = [
-    ['Personal documental',      t.opCosts.staff,         t.opCosts.staff - savPerCat.staff,      savPerCat.staff,      r.staff*100],
-    ['Almacenamiento físico',     t.opCosts.storage,       t.opCosts.storage - savPerCat.storage,  savPerCat.storage,    r.storage*100],
-    ['Insumos (papel/impresión)', t.opCosts.supplies,      t.opCosts.supplies - savPerCat.supplies,savPerCat.supplies,   r.supplies*100],
-    ['Búsqueda de documentos',    t.opCosts.search,        t.opCosts.search - savPerCat.search,    savPerCat.search,     r.search*100],
-    ['Gestión de vencimientos',   t.opCosts.expiry,        t.opCosts.expiry - savPerCat.expiry,    savPerCat.expiry,     r.expiry*100],
-    ['Cumplimiento / auditoría',  t.opCosts.compliance,    t.opCosts.compliance - savPerCat.compliance, savPerCat.compliance, r.compliance*100],
-    ['Errores documentales',      t.errCosts.docErrors,    t.errCosts.docErrors - savPerCat.errDoc,savPerCat.errDoc,     r.errors*100],
-    ['Errores operacionales',     t.errCosts.opErrors,     t.errCosts.opErrors - savPerCat.errOp,  savPerCat.errOp,      r.errors*100],
-    ['Tiempo improductivo (IDC)', t.timeCost,              t.timeCost - savPerCat.time,            savPerCat.time,       r.search*100],
+    ['Personal documental',      t.opCosts.staff,         t.opCosts.staff - savPerCat.staff,      savPerCat.staff],
+    ['Almacenamiento físico',     t.opCosts.storage,       t.opCosts.storage - savPerCat.storage,  savPerCat.storage],
+    ['Insumos (papel/impresión)', t.opCosts.supplies,      t.opCosts.supplies - savPerCat.supplies,savPerCat.supplies],
+    ['Búsqueda de documentos',    t.opCosts.search,        t.opCosts.search - savPerCat.search,    savPerCat.search],
+    ['Gestión de vencimientos',   t.opCosts.expiry,        t.opCosts.expiry - savPerCat.expiry,    savPerCat.expiry],
+    ['Cumplimiento / auditoría',  t.opCosts.compliance,    t.opCosts.compliance - savPerCat.compliance, savPerCat.compliance],
+    ['Errores documentales',      t.errCosts.docErrors,    t.errCosts.docErrors - savPerCat.errDoc,savPerCat.errDoc],
+    ['Errores operacionales',     t.errCosts.opErrors,     t.errCosts.opErrors - savPerCat.errOp,  savPerCat.errOp],
+    ['Tiempo improductivo (IDC)', t.timeCost,              t.timeCost - savPerCat.time,            savPerCat.time],
   ];
   const beforeTotal  = BA.reduce((a,b)=>a+b[1],0);
   const afterTotal   = BA.reduce((a,b)=>a+b[2],0);
   const savingTotal  = BA.reduce((a,b)=>a+b[3],0);
+  const totalReductionPct = calcReductionPct(beforeTotal, savingTotal);
 
   $('baTableBody').innerHTML = [
-    ...BA.map(([cat, before, after, saving, pct]) => `
+    ...BA.map(([cat, before, after, saving]) => {
+      const reductionPct = calcReductionPct(before, saving);
+      const reductionBadge = before > 0
+        ? `<span class="badge" style="background:#dcfce7;color:#166534">${reductionPct.toFixed(0)}%</span>`
+        : '<span class="badge" style="background:#e2e8f0;color:#475569">N/A</span>';
+
+      return `
       <tr>
         <td>${cat}</td>
         <td class="before">${fmt(before)}</td>
         <td class="after">${fmt(after)}</td>
         <td class="saving">${fmt(saving)}</td>
-        <td><span class="badge" style="background:#dcfce7;color:#166534">${pct.toFixed(0)}%</span></td>
-      </tr>`),
+        <td>${reductionBadge}</td>
+      </tr>`;
+    }),
     `<tr class="total-row">
       <td><strong>TOTAL</strong></td>
       <td class="before"><strong>${fmt(beforeTotal)}</strong></td>
       <td class="after"><strong>${fmt(afterTotal)}</strong></td>
       <td class="saving"><strong>${fmt(savingTotal)}</strong></td>
-      <td><strong>${((savingTotal/beforeTotal)*100).toFixed(0)}%</strong></td>
+      <td><strong>${totalReductionPct.toFixed(0)}%</strong></td>
     </tr>`
   ].join('');
 
@@ -1240,7 +1338,7 @@ function calcROI() {
     <tr class="${row.cumulative>=0?'table-success':''}">
       <td><strong>Año ${row.y}</strong></td>
       <td class="text-success">${fmt(row.gross)}</td>
-      <td class="text-muted">${fmt(row.maint)}</td>
+      <td class="text-muted">${fmt(row.recurring)}</td>
       <td class="${row.net>=0?'text-success':'text-danger'}">${fmt(row.net)}</td>
       <td class="${row.cumulative>=0?'text-success fw-bold':'text-danger'}">${fmt(row.cumulative)}</td>
       <td>${row.cumulative>=0
@@ -1293,7 +1391,7 @@ function calcROI() {
   }
 
   // ── Recommendations ──
-  $('recsRow').innerHTML = buildRecs(roi, invest, totalAnnualSavings, paybackYear, years)
+  $('recsRow').innerHTML = buildRecs(roi, invest, totalAnnualSavings, paybackYear, years, t)
     .map(r=>`<div class="col-md-6"><div class="rec-card"><div class="rec-icon">${r.icon}</div><div><div class="small fw-bold">${r.title}</div><div class="small text-muted">${r.body}</div></div></div></div>`)
     .join('');
 
@@ -1306,33 +1404,58 @@ function calcROI() {
 /* ────────────────────────────────────────────────────
    RECOMMENDATIONS
 ──────────────────────────────────────────────────── */
-function buildRecs(roi, invest, annualSav, paybackYear, years) {
-  const r = [];
+function buildRecs(roi, invest, annualSav, paybackYear, years, totals) {
+  const recs = [];
+
   if (roi < 0) {
-    r.push({icon:'⚠️', title:'ROI negativo', body:'Amplíe el alcance del proyecto o reduzca costos de adquisición para mejorar el retorno.'});
+    recs.push({icon:'⚠️', title:'Revisar alcance y costos iniciales', body:'El ROI actual es negativo. Priorice procesos críticos y evalúe una implementación por fases para reducir la inversión inicial.'});
   } else if (roi < 100) {
-    r.push({icon:'📈', title:'ROI moderado', body:`${roi.toFixed(0)}% de retorno es razonable. Incluir más módulos de automatización puede superar el 200%.`});
+    recs.push({icon:'📈', title:'Expandir casos de uso de mayor impacto', body:`El ROI proyectado (${roi.toFixed(0)}%) es positivo pero mejorable. Integre procesos de alto volumen para aumentar el retorno.`});
   } else {
-    r.push({icon:'🏆', title:'ROI excelente', body:`Un retorno del ${roi.toFixed(0)}% supera los benchmarks típicos. Priorice una implementación rápida.`});
+    recs.push({icon:'🏆', title:'Priorizar ejecución acelerada', body:`Con un ROI estimado de ${roi.toFixed(0)}%, conviene acelerar el despliegue para capturar antes los beneficios.`});
   }
-  if (autoLevel==='low') {
-    r.push({icon:'🌿', title:'Quick Win: Cero Papeles', body:'Digitalice los flujos de mayor volumen primero. El ahorro en insumos y almacenamiento es inmediato (< 3 meses).'});
-    r.push({icon:'🔗', title:'Integre ERP/CRM primero', body:'Eliminar la doble captura entre sistemas puede representar 20–40% del ahorro total en el primer año.'});
-    r.push({icon:'📅', title:'Active gestión de vencimientos', body:'Contratos, pólizas y permisos vencidos generan multas evitables. Implemente alertas automáticas en semana 1.'});
+
+  if (paybackYear) {
+    recs.push({icon:'⏱️', title:'Recuperación de inversión definida', body:`La recuperación ocurre en el año ${paybackYear} de ${years}. Planifique hitos trimestrales para sostener la curva de beneficios.`});
+  } else {
+    recs.push({icon:'🧩', title:'Recuperación fuera del horizonte analizado', body:`Con ${years} año(s) de análisis no se recupera la inversión. Revise mantenimiento anual, alcance funcional y procesos incluidos.`});
   }
-  if (autoLevel==='medium') {
-    r.push({icon:'⚡', title:'Automatice aprobaciones', body:'Los flujos BPM pueden reducir el tiempo de ciclo hasta un 70%, liberando capacidad operativa inmediatamente.'});
-    r.push({icon:'🔍', title:'Mejore la búsqueda', body:'Un motor de búsqueda semántico puede recuperar el 2.5 h/día/empleado en productividad (IDC benchmark).'});
+
+  const topSavings = [
+    ['Personal documental', totals.opCosts.staff, RED[autoLevel].staff],
+    ['Almacenamiento físico', totals.opCosts.storage, RED[autoLevel].storage],
+    ['Insumos (papel/impresión)', totals.opCosts.supplies, RED[autoLevel].supplies],
+    ['Búsqueda de documentos', totals.opCosts.search, RED[autoLevel].search],
+    ['Gestión de vencimientos', totals.opCosts.expiry, RED[autoLevel].expiry],
+    ['Cumplimiento / auditoría', totals.opCosts.compliance, RED[autoLevel].compliance],
+    ['Errores documentales', totals.errCosts.docErrors, RED[autoLevel].errors],
+    ['Errores operacionales', totals.errCosts.opErrors, RED[autoLevel].errors],
+    ['Tiempo improductivo (IDC)', totals.timeCost, RED[autoLevel].search]
+  ]
+    .map(([name, before, factor]) => ({
+      name,
+      annualSaving: before * factor,
+      reduction: before > 0 ? (factor * 100) : 0
+    }))
+    .sort((a, b) => b.annualSaving - a.annualSaving)
+    .slice(0, 2);
+
+  topSavings.forEach((item, idx) => {
+    if (item.annualSaving <= 0) return;
+    recs.push({
+      icon: idx === 0 ? '🎯' : '📌',
+      title: `Prioridad ${idx + 1}: ${item.name}`,
+      body: `Este rubro aporta aproximadamente ${fmt(item.annualSaving)} de ahorro anual (${item.reduction.toFixed(0)}% de reducción estimada).`
+    });
+  });
+
+  if (totals.errTotal > 0) {
+    recs.push({icon:'🛡️', title:'Controlar riesgos por errores y cumplimiento', body:`Los errores y reprocesos actuales representan ${fmt(totals.errTotal)} al año. Refuerce controles, trazabilidad y validaciones automáticas.`});
   }
-  if (autoLevel==='high') {
-    r.push({icon:'🧠', title:'Implemente IA y Process Mining', body:'Analice los procesos digitalizados con IA para identificar cuellos de botella adicionales y reducir más costos.'});
-  }
-  r.push({icon:'📊', title:'Defina KPIs de seguimiento', body:'Mida mensualmente: tiempo de búsqueda, tasa de errores, ciclo de aprobación y costo por documento procesado.'});
-  if (paybackYear && paybackYear<=2) {
-    r.push({icon:'💡', title:'Argumento para la dirección', body:`Con ${paybackYear} año(s) de recuperación, el proyecto tiene un perfil de retorno muy atractivo para presentar a la alta dirección.`});
-  }
-  r.push({icon:'🎓', title:'Capacitación continua', body:'El 60% del éxito en adopción de DMS/BPM depende de la capacitación. Planifique sesiones cada 6 meses.'});
-  return r.slice(0,6);
+
+  recs.push({icon:'📊', title:'Monitoreo continuo de KPIs', body:'Mida mensualmente tiempo de búsqueda, costo por documento, tasa de error y cumplimiento de SLA para sostener mejoras.'});
+
+  return recs.slice(0,6);
 }
 
 /* ────────────────────────────────────────────────────
@@ -1341,7 +1464,8 @@ function buildRecs(roi, invest, annualSav, paybackYear, years) {
 function resetForm() {
   document.querySelectorAll('input[type=number]').forEach(el=>el.value=el.defaultValue);
   document.querySelectorAll('input[type=range]').forEach(el=>{ el.value=el.defaultValue; });
-  $('cfg_years').value='3'; $('cfg_currency').value='USD'; $('cfg_maint').value='15';
+  $('cfg_years').value='3'; $('cfg_currency').value='USD'; $('cfg_maint').value='20';
+  $('cfg_deploy').value='cloud'; $('cfg_cloud_cycle').value='monthly'; $('cfg_cloud_fee').value='2500';
   // Reset automation
   document.querySelectorAll('.auto-btn').forEach(b=>b.classList.remove('sel-low','sel-medium','sel-high'));
   document.querySelector('[data-lvl="low"]').classList.add('sel-low');
@@ -1354,6 +1478,9 @@ function resetForm() {
   $('rv_misfiled').textContent='30%'; $('rv_lost').textContent='5%'; $('rv_cycle').textContent='5 d';
   document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));
   $('resultsSection').classList.remove('visible');
+  currentStep = 1;
+  toggleInfraFields();
+  updateWizardUI();
   updateLive();
 }
 
@@ -1368,7 +1495,7 @@ function exportCSV() {
     setTimeout(() => { msg.style.display = 'none'; }, 4000);
     return;
   }
-  let csv = 'Año,Ahorro Bruto,Mantenimiento,Beneficio Neto,Flujo Acumulado\n';
+  let csv = 'Año,Ahorro Bruto,Costo Recurrente,Beneficio Neto,Flujo Acumulado\n';
   rows.forEach(row => {
     const c = row.querySelectorAll('td');
     csv += [c[0].textContent.trim(),c[1].textContent.trim(),c[2].textContent.trim(),c[3].textContent.trim(),c[4].textContent.trim()].join(',') + '\n';
@@ -1389,6 +1516,8 @@ document.querySelectorAll('input[type=number], select').forEach(el => el.addEven
 ──────────────────────────────────────────────────── */
 window.addEventListener('DOMContentLoaded', () => {
   $('insightsList').innerHTML = INSIGHTS.low.map(i=>`<li class="mb-1">${i}</li>`).join('');
+  toggleInfraFields();
+  updateWizardUI();
   updateLive();
 });
 </script>
