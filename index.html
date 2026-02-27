@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROI Simulator – Transformación Digital</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #7c3aed;
+      --accent: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark: #0f172a;
+      --card-bg: #ffffff;
+      --body-bg: #f1f5f9;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 1rem;
+      --shadow: 0 4px 24px rgba(15,23,42,.08);
+      --shadow-lg: 0 12px 40px rgba(15,23,42,.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--body-bg);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary) 60%, var(--accent) 100%);
+      color: #fff;
+      padding: 4rem 1.5rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 2rem;
+      padding: .3rem .9rem;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      backdrop-filter: blur(6px);
+    }
+    .hero h1 { font-weight: 700; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.2; }
+    .hero p  { font-size: 1.05rem; opacity: .88; max-width: 680px; }
+    .hero-stat {
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: .75rem;
+      padding: .9rem 1.4rem;
+      backdrop-filter: blur(6px);
+      transition: transform .2s;
+    }
+    .hero-stat:hover { transform: translateY(-3px); }
+    .hero-stat .value { font-size: 1.6rem; font-weight: 700; }
+    .hero-stat .label { font-size: .78rem; opacity: .78; }
+
+    /* ── Section wrapper ── */
+    .section-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: .3rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background: var(--card-bg);
+      transition: box-shadow .25s, transform .25s;
+    }
+    .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+    .card-header-custom {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.4rem;
+    }
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: .6rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .card-icon-blue   { background: #eff6ff; color: var(--primary); }
+    .card-icon-purple { background: #f5f3ff; color: var(--secondary); }
+    .card-icon-sky    { background: #f0f9ff; color: var(--accent); }
+    .card-icon-green  { background: #ecfdf5; color: var(--success); }
+    .card-icon-amber  { background: #fffbeb; color: var(--warning); }
+
+    /* ── Range slider ── */
+    .range-group label { font-size: .82rem; font-weight: 500; }
+    .range-value {
+      background: var(--primary);
+      color: #fff;
+      border-radius: .4rem;
+      padding: .15rem .55rem;
+      font-size: .8rem;
+      font-weight: 600;
+      min-width: 60px;
+      text-align: center;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+      transition: box-shadow .2s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 6px rgba(37,99,235,.2);
+    }
+
+    /* ── Automation selector ── */
+    .auto-btn-group { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .auto-btn {
+      flex: 1 1 0;
+      min-width: 120px;
+      border: 2px solid var(--border);
+      border-radius: .75rem;
+      padding: .9rem .6rem;
+      cursor: pointer;
+      transition: all .2s;
+      background: #fff;
+      text-align: center;
+    }
+    .auto-btn .auto-icon { font-size: 1.6rem; margin-bottom: .35rem; }
+    .auto-btn .auto-title { font-size: .82rem; font-weight: 600; }
+    .auto-btn .auto-sub   { font-size: .72rem; color: var(--text-muted); }
+    .auto-btn.active-low    { border-color: var(--danger);   background: #fff5f5; }
+    .auto-btn.active-medium { border-color: var(--warning);  background: #fffbeb; }
+    .auto-btn.active-high   { border-color: var(--success);  background: #f0fdf4; }
+    .auto-btn:hover:not(.active-low):not(.active-medium):not(.active-high) {
+      border-color: var(--primary);
+    }
+
+    /* ── Currency input ── */
+    .input-group-text {
+      background: #f8fafc;
+      border-color: var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .form-control, .form-select {
+      border-color: var(--border);
+      border-radius: .6rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    /* ── Results ── */
+    .results-section { display: none; }
+    .results-section.visible { display: block; animation: slideUp .5s ease both; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes countUp { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+
+    .kpi-card {
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      animation: countUp .4s ease both;
+    }
+    .kpi-positive { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #6ee7b7; }
+    .kpi-neutral  { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #93c5fd; }
+    .kpi-warning  { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fcd34d; }
+    .kpi-value { font-size: 2rem; font-weight: 700; }
+    .kpi-label { font-size: .82rem; color: var(--text-muted); font-weight: 500; }
+
+    .chart-wrapper {
+      position: relative;
+      height: 280px;
+    }
+
+    /* ── Payback timeline ── */
+    .timeline-bar {
+      height: 28px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e2e8f0;
+      position: relative;
+    }
+    .timeline-fill {
+      height: 100%;
+      border-radius: 14px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+      background: linear-gradient(90deg, var(--primary), var(--success));
+    }
+
+    /* ── CTA button ── */
+    .btn-calc {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      border: none;
+      border-radius: .75rem;
+      padding: .85rem 2.2rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35);
+    }
+    .btn-calc:hover { opacity: .92; transform: translateY(-1px); }
+    .btn-calc:active { transform: translateY(1px); }
+
+    .btn-reset {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid var(--border);
+      border-radius: .75rem;
+      padding: .85rem 1.6rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-reset:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── Tooltip helpers ── */
+    .help-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text-muted);
+      font-size: .62rem;
+      font-weight: 700;
+      cursor: help;
+      margin-left: .3rem;
+      vertical-align: middle;
+    }
+
+    /* ── Sector tags ── */
+    .sector-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+    .sector-tag {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      padding: .25rem .75rem;
+      font-size: .75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sector-tag:hover, .sector-tag.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      padding: 1.6rem;
+      font-size: .82rem;
+    }
+    footer a { color: rgba(255,255,255,.7); text-decoration: none; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 576px) {
+      .kpi-value { font-size: 1.5rem; }
+      .hero h1 { font-size: 1.6rem; }
+    }
+
+    /* ── Animated gradient border on results ── */
+    @keyframes borderGlow {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
+      50%       { box-shadow: 0 0 0 6px rgba(124,58,237,.25); }
+    }
+    .results-glow { animation: borderGlow 3s ease infinite; }
+
+    /* ── Number counter animation ── */
+    .counter-anim { display: inline-block; }
+
+    /* ── Tab pills ── */
+    .nav-pills .nav-link { border-radius: .6rem; font-size: .85rem; font-weight: 500; color: var(--text-muted); }
+    .nav-pills .nav-link.active { background: var(--primary); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<header class="hero">
+  <div class="container position-relative">
+    <div class="hero-badge">
+      <i class="bi bi-cpu-fill"></i> Transformación Digital
+    </div>
+    <h1 class="mb-3">Simulador de Retorno de<br>Inversión (ROI)</h1>
+    <p class="mb-4">
+      Calcule el retorno de su inversión en digitalización de documentos, automatización de procesos,
+      gestión de vencimientos, integración ERP/CRM y más. Obtenga resultados en segundos.
+    </p>
+
+    <!-- Sector quick-tags -->
+    <div class="sector-tags" id="sectorTags">
+      <span class="sector-tag active" data-sector="docs">📄 Gestión Documental</span>
+      <span class="sector-tag" data-sector="erp">🔗 ERP / CRM</span>
+      <span class="sector-tag" data-sector="bpm">⚙️ Automatización BPM</span>
+      <span class="sector-tag" data-sector="zero">🌿 Cero Papeles</span>
+      <span class="sector-tag" data-sector="search">🔍 Búsqueda de Doc.</span>
+      <span class="sector-tag" data-sector="expiry">📅 Vencimientos</span>
+    </div>
+
+    <!-- Summary stats row -->
+    <div class="row g-3 mt-4">
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="value">65%</div>
+          <div class="label">Reducción promedio de costos operativos</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="value">18 m</div>
+          <div class="label">Payback promedio en digitalización</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="value">3.2×</div>
+          <div class="label">ROI típico a 3 años</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="hero-stat">
+          <div class="value">80%</div>
+          <div class="label">Mejora en tiempos de búsqueda</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     MAIN FORM
+══════════════════════════════════════════ -->
+<main class="container py-5">
+
+  <div class="row g-4">
+
+    <!-- ── LEFT COLUMN: Inputs ── -->
+    <div class="col-lg-7">
+
+      <!-- 1. AUTOMATION LEVEL -->
+      <div class="card p-4 mb-4">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-blue"><i class="bi bi-gear-wide-connected"></i></div>
+          <div>
+            <div class="section-label">Paso 1</div>
+            <h5 class="mb-0 fw-600">Nivel de Automatización Actual</h5>
+          </div>
+        </div>
+        <p class="text-muted small mb-3">Seleccione el estado actual de sus procesos documentales y operativos.</p>
+        <div class="auto-btn-group" id="automationGroup">
+          <div class="auto-btn active-low" data-level="low" onclick="selectAutomation(this)">
+            <div class="auto-icon">📋</div>
+            <div class="auto-title">Formularios Manuales</div>
+            <div class="auto-sub">Bajo — Papel / Hojas de cálculo</div>
+          </div>
+          <div class="auto-btn" data-level="medium" onclick="selectAutomation(this)">
+            <div class="auto-icon">💻</div>
+            <div class="auto-title">Captura Digitalizada</div>
+            <div class="auto-sub">Medio — Formularios digitales</div>
+          </div>
+          <div class="auto-btn" data-level="high" onclick="selectAutomation(this)">
+            <div class="auto-icon">🤖</div>
+            <div class="auto-title">Procesos Integrados</div>
+            <div class="auto-sub">Alto — ECM / DMS / BPM</div>
+          </div>
+        </div>
+        <div id="automationDesc" class="alert alert-info small mt-3 mb-0 py-2">
+          <i class="bi bi-info-circle me-1"></i>
+          <span id="automationDescText">Procesos manuales con alto riesgo de errores, duplicados y pérdida de información. Potencial de mejora muy alto.</span>
+        </div>
+      </div>
+
+      <!-- 2. ACQUISITION COSTS -->
+      <div class="card p-4 mb-4">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-purple"><i class="bi bi-currency-dollar"></i></div>
+          <div>
+            <div class="section-label">Paso 2</div>
+            <h5 class="mb-0">Costos de Adquisición del Proyecto</h5>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Licencias de Software
+              <span class="help-icon" title="Costo de licencias anuales o perpetuas del software ECM/DMS/BPM.">?</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="costLicenses" value="25000" min="0" step="500" oninput="updateRange('costLicenses')" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Implementación / Consultoría</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="costImpl" value="15000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Infraestructura (servidores / nube)</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="costInfra" value="8000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Capacitación del personal</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="costTraining" value="5000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Digitalización de documentos físicos</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="costDigitize" value="10000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Integración ERP/CRM/otros sistemas</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="costIntegration" value="12000" min="0" step="500" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. CURRENT OPERATIONAL COSTS -->
+      <div class="card p-4 mb-4">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-sky"><i class="bi bi-graph-up-arrow"></i></div>
+          <div>
+            <div class="section-label">Paso 3</div>
+            <h5 class="mb-0">Costos Operativos Actuales (anual)</h5>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Personal dedicado a gestión documental
+              <span class="help-icon" title="Salario anual total del personal que gestiona documentos físicos / digitales.">?</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="opStaff" value="60000" min="0" step="1000" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Almacenamiento físico (alquiler/mobiliario)</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="opStorage" value="12000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Insumos (papel, impresión, correo)</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="opSupplies" value="8000" min="0" step="200" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Tiempo en búsqueda de documentos</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="opSearch" value="20000" min="0" step="500"
+                title="Costo anual equivalente en horas dedicadas a buscar documentos." />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Gestión de vencimientos (manual)</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="opExpiry" value="6000" min="0" step="200" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Costos de cumplimiento / auditoría</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="opCompliance" value="15000" min="0" step="500" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. PROCESS METRICS -->
+      <div class="card p-4 mb-4">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-amber"><i class="bi bi-sliders"></i></div>
+          <div>
+            <div class="section-label">Paso 4</div>
+            <h5 class="mb-0">Métricas del Proceso Actual</h5>
+          </div>
+        </div>
+
+        <!-- Employees -->
+        <div class="range-group mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label>Número de empleados que generan / usan documentos</label>
+            <span class="range-value" id="valEmployees">50</span>
+          </div>
+          <input type="range" id="rEmployees" min="5" max="500" step="5" value="50" oninput="syncRange('rEmployees','valEmployees',null,null,'d')">
+        </div>
+
+        <!-- Docs per day -->
+        <div class="range-group mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label>Documentos procesados por día</label>
+            <span class="range-value" id="valDocs">200</span>
+          </div>
+          <input type="range" id="rDocs" min="10" max="5000" step="10" value="200" oninput="syncRange('rDocs','valDocs',null,null,'d')">
+        </div>
+
+        <!-- Hours searching -->
+        <div class="range-group mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label>Horas/semana por empleado buscando documentos</label>
+            <span class="range-value" id="valSearchHrs">4</span>
+          </div>
+          <input type="range" id="rSearchHrs" min="0.5" max="20" step="0.5" value="4" oninput="syncRange('rSearchHrs','valSearchHrs',null,null,'h')">
+        </div>
+
+        <!-- Process cycle time -->
+        <div class="range-group mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label>Tiempo de ciclo promedio de aprobación (días)</label>
+            <span class="range-value" id="valCycle">5</span>
+          </div>
+          <input type="range" id="rCycle" min="1" max="30" step="1" value="5" oninput="syncRange('rCycle','valCycle',null,null,'d')">
+        </div>
+
+        <!-- Avg salary -->
+        <div class="range-group mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label>Salario promedio anual por empleado ($)</label>
+            <span class="range-value" id="valSalary">$30k</span>
+          </div>
+          <input type="range" id="rSalary" min="10000" max="120000" step="1000" value="30000" oninput="syncRangeSalary()">
+        </div>
+      </div>
+
+      <!-- 5. ERROR COSTS -->
+      <div class="card p-4 mb-4">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-green"><i class="bi bi-exclamation-triangle"></i></div>
+          <div>
+            <div class="section-label">Paso 5</div>
+            <h5 class="mb-0">Costos de Errores (anual)</h5>
+          </div>
+        </div>
+        <p class="text-muted small mb-3">Cuantifique el impacto económico de los errores más comunes en su organización.</p>
+
+        <div class="row g-3">
+          <!-- Doc management errors -->
+          <div class="col-12"><p class="small fw-600 text-muted mb-1"><i class="bi bi-file-earmark-x text-danger me-1"></i>Errores en Gestión Documental</p></div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Documentos perdidos / extraviados</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errLost" value="5000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Versiones duplicadas / incorrectas</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errDuplicate" value="3000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Incumplimiento por vencimientos</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errExpiry" value="8000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Reprocesos por datos incorrectos</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errRework" value="10000" min="0" step="500" />
+            </div>
+          </div>
+
+          <!-- Operational errors -->
+          <div class="col-12 mt-2"><p class="small fw-600 text-muted mb-1"><i class="bi bi-clipboard-x text-warning me-1"></i>Errores en Operaciones Diarias</p></div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Errores de entrada de datos</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errDataEntry" value="7000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Fallas en integración de sistemas</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errIntegration" value="12000" min="0" step="500" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Multas / sanciones regulatorias</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errFines" value="15000" min="0" step="1000" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Demoras en atención al cliente</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="errService" value="9000" min="0" step="500" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. PROJECT CONFIGURATION -->
+      <div class="card p-4 mb-4">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-blue"><i class="bi bi-calendar3"></i></div>
+          <div>
+            <div class="section-label">Paso 6</div>
+            <h5 class="mb-0">Configuración del Proyecto</h5>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Período de análisis (años)</label>
+            <select class="form-select" id="cfgYears">
+              <option value="1">1 año</option>
+              <option value="2">2 años</option>
+              <option value="3" selected>3 años</option>
+              <option value="4">4 años</option>
+              <option value="5">5 años</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Tasa de descuento (%)</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="cfgDiscount" value="8" min="0" max="50" step="0.5" />
+              <span class="input-group-text">%</span>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Crecimiento anual esperado del negocio (%)</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="cfgGrowth" value="5" min="0" max="50" step="0.5" />
+              <span class="input-group-text">%</span>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small fw-500">Moneda</label>
+            <select class="form-select" id="cfgCurrency">
+              <option value="USD">USD – Dólar</option>
+              <option value="COP">COP – Peso colombiano</option>
+              <option value="EUR">EUR – Euro</option>
+              <option value="MXN">MXN – Peso mexicano</option>
+              <option value="CLP">CLP – Peso chileno</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="d-flex gap-3 flex-wrap">
+        <button class="btn-calc" onclick="calculateROI()">
+          <i class="bi bi-calculator me-2"></i>Calcular ROI
+        </button>
+        <button class="btn-reset" onclick="resetForm()">
+          <i class="bi bi-arrow-counterclockwise me-2"></i>Restablecer
+        </button>
+      </div>
+
+    </div><!-- /left col -->
+
+    <!-- ── RIGHT COLUMN: Quick summary panel (sticky) ── -->
+    <div class="col-lg-5">
+      <div class="card p-4" style="position:sticky; top:1.5rem;">
+        <div class="card-header-custom">
+          <div class="card-icon card-icon-green"><i class="bi bi-speedometer2"></i></div>
+          <div>
+            <h5 class="mb-0">Resumen en Tiempo Real</h5>
+            <small class="text-muted">Se actualiza al ingresar datos</small>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:#f8fafc; border:1px solid var(--border);">
+              <div class="small text-muted">Inversión Total</div>
+              <div class="fw-700 text-primary fs-5" id="liveInvestment">$75,000</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:#f8fafc; border:1px solid var(--border);">
+              <div class="small text-muted">Costo Op. Anual</div>
+              <div class="fw-700 text-secondary fs-5" id="liveOpCost">$121,000</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:#f8fafc; border:1px solid var(--border);">
+              <div class="small text-muted">Errores Anuales</div>
+              <div class="fw-700 text-danger fs-5" id="liveErrors">$69,000</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:#f8fafc; border:1px solid var(--border);">
+              <div class="small text-muted">Ahorro Pot. Anual</div>
+              <div class="fw-700 text-success fs-5" id="liveSavings">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini donut chart -->
+        <div class="chart-wrapper" style="height:200px;">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <p class="text-center text-muted small mt-2">Distribución de costos actuales</p>
+
+        <!-- Quick insights based on automation level -->
+        <div id="quickInsights" class="mt-3">
+          <p class="small fw-600 mb-2"><i class="bi bi-lightbulb text-warning me-1"></i>Beneficios esperados con la solución:</p>
+          <ul class="list-unstyled small" id="insightsList"></ul>
+        </div>
+      </div>
+    </div>
+  </div><!-- /row -->
+
+  <!-- ══════════════════════════════════════════
+       RESULTS SECTION
+  ══════════════════════════════════════════ -->
+  <div class="results-section mt-5" id="resultsSection">
+    <div class="text-center mb-4">
+      <span class="section-label d-block">Resultados</span>
+      <h2 class="fw-700">Análisis de ROI Completo</h2>
+      <p class="text-muted">Basado en los datos ingresados y el nivel de automatización seleccionado.</p>
+    </div>
+
+    <!-- KPI row -->
+    <div class="row g-3 mb-4" id="kpiRow">
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-positive">
+          <div class="kpi-value text-success" id="kpiROI">—</div>
+          <div class="kpi-label">ROI del Proyecto</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-neutral">
+          <div class="kpi-value text-primary" id="kpiNPV">—</div>
+          <div class="kpi-label">VPN (Valor Presente Neto)</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-warning">
+          <div class="kpi-value text-warning" id="kpiPayback">—</div>
+          <div class="kpi-label">Período de Recuperación</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-positive">
+          <div class="kpi-value text-success" id="kpiSavings">—</div>
+          <div class="kpi-label">Ahorro Total Proyectado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-7">
+        <div class="card p-4 results-glow">
+          <h6 class="fw-600 mb-3"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Flujo de Caja Acumulado</h6>
+          <div class="chart-wrapper">
+            <canvas id="cashflowChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card p-4">
+          <h6 class="fw-600 mb-3"><i class="bi bi-pie-chart-fill me-2 text-secondary"></i>Composición del Ahorro</h6>
+          <div class="chart-wrapper">
+            <canvas id="savingsBreakChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Year-by-year table -->
+    <div class="card p-4 mb-4">
+      <h6 class="fw-600 mb-3"><i class="bi bi-table me-2 text-accent"></i>Proyección Año a Año</h6>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle" id="projTable">
+          <thead class="table-light">
+            <tr>
+              <th>Año</th>
+              <th>Ahorro Bruto</th>
+              <th>Costo Operativo Nuevo</th>
+              <th>Beneficio Neto</th>
+              <th>Flujo Acumulado</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="projTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Payback visual -->
+    <div class="card p-4 mb-4">
+      <h6 class="fw-600 mb-3"><i class="bi bi-hourglass-split me-2 text-warning"></i>Progreso hacia el Payback</h6>
+      <div class="d-flex justify-content-between small text-muted mb-1">
+        <span>Inicio</span>
+        <span id="paybackLabel">—</span>
+        <span>Fin del período</span>
+      </div>
+      <div class="timeline-bar">
+        <div class="timeline-fill" id="timelineFill" style="width:0%"></div>
+      </div>
+      <p class="text-muted small mt-2" id="paybackNote"></p>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="card p-4 mb-4">
+      <h6 class="fw-600 mb-3"><i class="bi bi-stars me-2 text-warning"></i>Recomendaciones Estratégicas</h6>
+      <div class="row g-3" id="recommendationsRow"></div>
+    </div>
+
+    <!-- Export row -->
+    <div class="d-flex gap-3 flex-wrap justify-content-center mt-3">
+      <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer me-2"></i>Imprimir / PDF</button>
+      <button class="btn btn-outline-secondary" onclick="exportCSV()"><i class="bi bi-filetype-csv me-2"></i>Exportar CSV</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <p class="mb-1">
+      <strong style="color:rgba(255,255,255,.8)">ROI Simulator – Transformación Digital</strong>
+    </p>
+    <p class="mb-0">Los resultados son estimaciones basadas en benchmarks de la industria. Consulte con su proveedor para datos específicos de su sector.</p>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let automationLevel = 'low';
+let donutChartInst = null;
+let cashflowChartInst = null;
+let savingsBreakChartInst = null;
+
+/* Reduction factors per automation level (savings as % of current costs) */
+const REDUCTION = {
+  low:    { staff: .60, storage: .90, supplies: .85, search: .80, expiry: .75, compliance: .50, errors: .70, cycle: .75 },
+  medium: { staff: .35, storage: .60, supplies: .60, search: .55, expiry: .50, compliance: .30, errors: .45, cycle: .50 },
+  high:   { staff: .15, storage: .30, supplies: .30, search: .25, expiry: .20, compliance: .15, errors: .20, cycle: .20 }
+};
+
+const INSIGHTS = {
+  low: [
+    '✅ Hasta 60% de reducción en personal documental',
+    '✅ 85% menos en insumos de papel e impresión',
+    '✅ 80% menos tiempo buscando documentos',
+    '✅ Control automatizado de vencimientos',
+    '✅ Trazabilidad completa de auditoría',
+    '✅ Integración con ERP/CRM sin doble captura'
+  ],
+  medium: [
+    '✅ 35% de reducción en personal documental',
+    '✅ 60% menos en almacenamiento físico',
+    '✅ Flujos de aprobación digitales integrados',
+    '✅ Alertas automáticas de vencimientos',
+    '✅ Reducción de errores en integración de sistemas'
+  ],
+  high: [
+    '✅ Optimización de procesos ya digitalizados',
+    '✅ IA para clasificación y extracción de datos',
+    '✅ Analítica avanzada de procesos (Process Mining)',
+    '✅ Reducción de costos de mantenimiento de plataformas'
+  ]
+};
+
+const AUTOMATION_DESC = {
+  low: 'Procesos manuales con alto riesgo de errores, duplicados y pérdida de información. Potencial de mejora muy alto.',
+  medium: 'Formularios digitales básicos. Existe duplicidad entre papel y digital. Oportunidad de integración y automatización de flujos.',
+  high: 'Plataformas ECM/DMS/BPM activas. El foco debe ser la optimización, IA y analítica para maximizar el valor.'
+};
+
+/* Currency symbols */
+const CURR_SYMBOL = { USD: '$', COP: 'COP ', EUR: '€', MXN: 'MX$', CLP: 'CLP ' };
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function getCurrSymbol() { return CURR_SYMBOL[document.getElementById('cfgCurrency').value] || '$'; }
+function fmt(n) { return getCurrSymbol() + n.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function fmtPct(n) { return (n >= 0 ? '+' : '') + n.toFixed(1) + '%'; }
+
+function syncRange(rangeId, labelId, _a, _b, suffix) {
+  const v = document.getElementById(rangeId).value;
+  document.getElementById(labelId).textContent = v + (suffix === 'h' ? ' h' : suffix === 'd' ? ' días' : '');
+  updateLivePanel();
+}
+function syncRangeSalary() {
+  const v = parseInt(document.getElementById('rSalary').value);
+  document.getElementById('valSalary').textContent = '$' + (v / 1000).toFixed(0) + 'k';
+  updateLivePanel();
+}
+
+/* ─────────────────────────────────────────────
+   AUTOMATION SELECTOR
+───────────────────────────────────────────── */
+function selectAutomation(btn) {
+  document.querySelectorAll('.auto-btn').forEach(b => {
+    b.classList.remove('active-low', 'active-medium', 'active-high');
+  });
+  const level = btn.dataset.level;
+  automationLevel = level;
+  btn.classList.add('active-' + level);
+  document.getElementById('automationDescText').textContent = AUTOMATION_DESC[level];
+
+  // Update insights list
+  const list = document.getElementById('insightsList');
+  list.innerHTML = INSIGHTS[level].map(i => `<li class="mb-1"><span>${i}</span></li>`).join('');
+
+  updateLivePanel();
+}
+
+/* ─────────────────────────────────────────────
+   SECTOR TAGS
+───────────────────────────────────────────── */
+document.getElementById('sectorTags').addEventListener('click', e => {
+  if (e.target.classList.contains('sector-tag')) {
+    document.querySelectorAll('.sector-tag').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+});
+
+/* ─────────────────────────────────────────────
+   LIVE PANEL UPDATE
+───────────────────────────────────────────── */
+function computeTotals() {
+  const invest = getNum('costLicenses') + getNum('costImpl') + getNum('costInfra')
+               + getNum('costTraining') + getNum('costDigitize') + getNum('costIntegration');
+
+  const opCost = getNum('opStaff') + getNum('opStorage') + getNum('opSupplies')
+               + getNum('opSearch') + getNum('opExpiry') + getNum('opCompliance');
+
+  const errors = getNum('errLost') + getNum('errDuplicate') + getNum('errExpiry')
+               + getNum('errRework') + getNum('errDataEntry') + getNum('errIntegration')
+               + getNum('errFines') + getNum('errService');
+
+  return { invest, opCost, errors };
+}
+
+function computeAnnualSavings(opCost, errors) {
+  const r = REDUCTION[automationLevel];
+  return (
+    getNum('opStaff')       * r.staff +
+    getNum('opStorage')     * r.storage +
+    getNum('opSupplies')    * r.supplies +
+    getNum('opSearch')      * r.search +
+    getNum('opExpiry')      * r.expiry +
+    getNum('opCompliance')  * r.compliance +
+    errors                  * r.errors
+  );
+}
+
+function updateLivePanel() {
+  const { invest, opCost, errors } = computeTotals();
+  const savings = computeAnnualSavings(opCost, errors);
+
+  document.getElementById('liveInvestment').textContent = fmt(invest);
+  document.getElementById('liveOpCost').textContent = fmt(opCost);
+  document.getElementById('liveErrors').textContent = fmt(errors);
+  document.getElementById('liveSavings').textContent = fmt(savings);
+
+  // Donut
+  const labels = ['Personal', 'Almacenamiento', 'Insumos', 'Búsqueda', 'Vencimientos', 'Cumplimiento', 'Errores'];
+  const data = [
+    getNum('opStaff'), getNum('opStorage'), getNum('opSupplies'),
+    getNum('opSearch'), getNum('opExpiry'), getNum('opCompliance'), errors
+  ];
+  const colors = ['#2563eb','#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#f97316'];
+
+  if (donutChartInst) {
+    donutChartInst.data.datasets[0].data = data;
+    donutChartInst.update();
+  } else {
+    donutChartInst = new Chart(document.getElementById('donutChart'), {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+      options: {
+        cutout: '65%',
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } } },
+        animation: { duration: 600 }
+      }
+    });
+  }
+
+  // Insights
+  const list = document.getElementById('insightsList');
+  if (!list.children.length) {
+    list.innerHTML = INSIGHTS[automationLevel].map(i => `<li class="mb-1">${i}</li>`).join('');
+  }
+}
+
+/* ─────────────────────────────────────────────
+   MAIN CALCULATION
+───────────────────────────────────────────── */
+function calculateROI() {
+  const { invest, opCost, errors } = computeTotals();
+  const annualSavings = computeAnnualSavings(opCost, errors);
+  const years = parseInt(document.getElementById('cfgYears').value);
+  const discount = getNum('cfgDiscount') / 100;
+  const growth = getNum('cfgGrowth') / 100;
+  const r = REDUCTION[automationLevel];
+
+  // New annual operating cost (what remains after savings)
+  const newOpCostAnnual = opCost - (
+    getNum('opStaff')       * r.staff +
+    getNum('opStorage')     * r.storage +
+    getNum('opSupplies')    * r.supplies +
+    getNum('opSearch')      * r.search +
+    getNum('opExpiry')      * r.expiry +
+    getNum('opCompliance')  * r.compliance
+  );
+
+  // Year-by-year cash flows
+  let npv = -invest;
+  let totalSavings = 0;
+  let paybackYear = null;
+  let cumulative = -invest;
+  const rows = [];
+
+  for (let y = 1; y <= years; y++) {
+    const growthFactor = Math.pow(1 + growth, y - 1);
+    const yearlySavings = annualSavings * growthFactor;
+    const yearlyNewOp = newOpCostAnnual * growthFactor;
+    const netBenefit = yearlySavings - yearlyNewOp * 0.05; // 5% of new op = maintenance
+    const discountedBenefit = netBenefit / Math.pow(1 + discount, y);
+    npv += discountedBenefit;
+    totalSavings += yearlySavings;
+    cumulative += netBenefit;
+    if (paybackYear === null && cumulative >= 0) paybackYear = y;
+    rows.push({ y, yearlySavings, yearlyNewOp, netBenefit, cumulative });
+  }
+
+  const roi = invest > 0 ? ((totalSavings - invest) / invest) * 100 : 0;
+
+  // ── KPIs ──
+  document.getElementById('kpiROI').textContent = fmtPct(roi);
+  document.getElementById('kpiNPV').textContent = fmt(npv);
+  document.getElementById('kpiPayback').textContent = paybackYear ? paybackYear + (paybackYear === 1 ? ' año' : ' años') : '> ' + years + ' años';
+  document.getElementById('kpiSavings').textContent = fmt(totalSavings);
+
+  // ── Payback bar ──
+  const pct = paybackYear ? Math.min((paybackYear / years) * 100, 100) : 100;
+  document.getElementById('timelineFill').style.width = pct + '%';
+  document.getElementById('paybackLabel').textContent = paybackYear ? 'Payback: Año ' + paybackYear : 'No alcanzado';
+  document.getElementById('paybackNote').textContent = paybackYear
+    ? `La inversión se recupera en el año ${paybackYear}. A partir de entonces, cada año genera beneficio neto de ${fmt(rows[paybackYear - 1].netBenefit)}.`
+    : `Con los datos actuales, la inversión no se recupera en el período de ${years} años. Considere aumentar el alcance o reducir costos de adquisición.`;
+
+  // ── Table ──
+  const tbody = document.getElementById('projTableBody');
+  tbody.innerHTML = rows.map(r => {
+    const isBefore = r.cumulative < 0;
+    return `<tr class="${isBefore ? '' : 'table-success'}">
+      <td><strong>Año ${r.y}</strong></td>
+      <td class="text-success">${fmt(r.yearlySavings)}</td>
+      <td class="text-muted">${fmt(r.yearlyNewOp)}</td>
+      <td class="${r.netBenefit >= 0 ? 'text-success' : 'text-danger'}">${fmt(r.netBenefit)}</td>
+      <td class="${r.cumulative >= 0 ? 'text-success fw-600' : 'text-danger'}">${fmt(r.cumulative)}</td>
+      <td>${r.cumulative >= 0 ? '<span class="badge bg-success">✓ Positivo</span>' : '<span class="badge bg-warning text-dark">Recuperando</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Cash-flow chart ──
+  const cfLabels = ['Año 0', ...rows.map(r => 'Año ' + r.y)];
+  const cfData = [-invest, ...rows.map(r => r.cumulative)];
+  const cfColors = cfData.map(v => v >= 0 ? 'rgba(16,185,129,.7)' : 'rgba(239,68,68,.7)');
+
+  if (cashflowChartInst) cashflowChartInst.destroy();
+  cashflowChartInst = new Chart(document.getElementById('cashflowChart'), {
+    type: 'bar',
+    data: {
+      labels: cfLabels,
+      datasets: [
+        {
+          label: 'Flujo Acumulado',
+          data: cfData,
+          backgroundColor: cfColors,
+          borderRadius: 6,
+          borderSkipped: false
+        },
+        {
+          label: 'Línea de equilibrio',
+          data: Array(cfLabels.length).fill(0),
+          type: 'line',
+          borderColor: '#94a3b8',
+          borderDash: [5, 5],
+          borderWidth: 1.5,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top' }, tooltip: { callbacks: {
+        label: ctx => ' ' + fmt(ctx.raw)
+      }}},
+      scales: { y: { ticks: { callback: v => fmt(v) } } },
+      animation: { duration: 800, easing: 'easeOutQuart' }
+    }
+  });
+
+  // ── Savings breakdown chart ──
+  const savLabels = ['Personal', 'Almacenamiento', 'Insumos', 'Búsqueda doc.', 'Vencimientos', 'Cumplimiento', 'Errores doc.', 'Errores op.'];
+  const savColors = ['#2563eb','#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#f97316','#ec4899'];
+  const errorsTotal = getNum('errLost') + getNum('errDuplicate') + getNum('errExpiry') + getNum('errRework');
+  const errorsOp    = getNum('errDataEntry') + getNum('errIntegration') + getNum('errFines') + getNum('errService');
+  const savData = [
+    getNum('opStaff')      * r.staff,
+    getNum('opStorage')    * r.storage,
+    getNum('opSupplies')   * r.supplies,
+    getNum('opSearch')     * r.search,
+    getNum('opExpiry')     * r.expiry,
+    getNum('opCompliance') * r.compliance,
+    errorsTotal            * r.errors,
+    errorsOp               * r.errors
+  ];
+
+  if (savingsBreakChartInst) savingsBreakChartInst.destroy();
+  savingsBreakChartInst = new Chart(document.getElementById('savingsBreakChart'), {
+    type: 'pie',
+    data: {
+      labels: savLabels,
+      datasets: [{ data: savData, backgroundColor: savColors, borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { callbacks: {
+        label: ctx => ' ' + fmt(ctx.raw) + ' (' + ((ctx.raw / savData.reduce((a,b)=>a+b,0))*100).toFixed(1) + '%)'
+      }}}
+    }
+  });
+
+  // ── Recommendations ──
+  const recs = generateRecommendations(roi, invest, annualSavings, paybackYear, years);
+  document.getElementById('recommendationsRow').innerHTML = recs.map(rec => `
+    <div class="col-md-6">
+      <div class="d-flex gap-3 p-3 rounded-3" style="background:#f8fafc; border:1px solid var(--border);">
+        <div style="font-size:1.5rem;">${rec.icon}</div>
+        <div>
+          <div class="small fw-600">${rec.title}</div>
+          <div class="small text-muted">${rec.body}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Show results
+  const section = document.getElementById('resultsSection');
+  section.classList.add('visible');
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+/* ─────────────────────────────────────────────
+   RECOMMENDATIONS
+───────────────────────────────────────────── */
+function generateRecommendations(roi, invest, annualSavings, paybackYear, years) {
+  const recs = [];
+  if (roi < 0) {
+    recs.push({ icon: '⚠️', title: 'ROI negativo detectado', body: 'Revise los costos de adquisición o amplíe el alcance del proyecto para aumentar el ahorro anual.' });
+  } else if (roi < 50) {
+    recs.push({ icon: '📈', title: 'ROI moderado', body: 'Considere incluir módulos adicionales de automatización para maximizar el retorno.' });
+  } else {
+    recs.push({ icon: '🏆', title: 'Excelente ROI', body: `Un retorno de ${roi.toFixed(1)}% es muy competitivo. Priorice la implementación rápida.` });
+  }
+  if (automationLevel === 'low') {
+    recs.push({ icon: '🚀', title: 'Quick wins en Cero Papeles', body: 'Comience por digitalizar los flujos de mayor volumen. El ahorro en insumos y almacenamiento es inmediato.' });
+    recs.push({ icon: '🔗', title: 'Integre primero ERP/CRM', body: 'Eliminar la doble captura entre sistemas puede generar entre 20-40% del ahorro total en el primer año.' });
+  }
+  if (automationLevel === 'medium') {
+    recs.push({ icon: '⚡', title: 'Active alertas de vencimientos', body: 'Un motor de notificaciones automatizado puede evitar multas y renovar contratos a tiempo, con ROI inmediato.' });
+  }
+  if (automationLevel === 'high') {
+    recs.push({ icon: '🧠', title: 'Considere IA y Process Mining', body: 'Con su nivel de madurez, la analítica avanzada puede identificar cuellos de botella adicionales y reducir más costos.' });
+  }
+  recs.push({ icon: '📊', title: 'Métricas de seguimiento', body: 'Establezca KPIs de tiempo de búsqueda, tasa de errores y tiempos de ciclo para medir el avance mensualmente.' });
+  if (paybackYear && paybackYear <= 2) {
+    recs.push({ icon: '💡', title: 'Payback rápido', body: `Con ${paybackYear} año(s) de recuperación, la justificación financiera es sólida para presentar a la dirección.` });
+  }
+  return recs.slice(0, 6);
+}
+
+/* ─────────────────────────────────────────────
+   RESET
+───────────────────────────────────────────── */
+function resetForm() {
+  document.querySelectorAll('input[type=number]').forEach(el => {
+    el.value = el.defaultValue;
+  });
+  document.querySelectorAll('input[type=range]').forEach(el => {
+    el.value = el.defaultValue;
+  });
+  document.getElementById('cfgYears').value = '3';
+  document.getElementById('cfgCurrency').value = 'USD';
+  // Reset automation
+  document.querySelectorAll('.auto-btn').forEach(b => b.classList.remove('active-low','active-medium','active-high'));
+  document.querySelector('[data-level="low"]').classList.add('active-low');
+  automationLevel = 'low';
+  document.getElementById('automationDescText').textContent = AUTOMATION_DESC.low;
+  // Reset range labels
+  document.getElementById('valEmployees').textContent = '50';
+  document.getElementById('valDocs').textContent = '200';
+  document.getElementById('valSearchHrs').textContent = '4 h';
+  document.getElementById('valCycle').textContent = '5 días';
+  document.getElementById('valSalary').textContent = '$30k';
+  // Hide results
+  document.getElementById('resultsSection').classList.remove('visible');
+  updateLivePanel();
+}
+
+/* ─────────────────────────────────────────────
+   EXPORT CSV
+───────────────────────────────────────────── */
+function exportCSV() {
+  const rows = document.querySelectorAll('#projTableBody tr');
+  if (!rows.length) { alert('Primero calcule el ROI.'); return; }
+  let csv = 'Año,Ahorro Bruto,Costo Op. Nuevo,Beneficio Neto,Flujo Acumulado\n';
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    csv += [cells[0].textContent, cells[1].textContent, cells[2].textContent, cells[3].textContent, cells[4].textContent].join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'roi_simulacion.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ─────────────────────────────────────────────
+   LIVE UPDATE on all numeric inputs
+───────────────────────────────────────────── */
+document.querySelectorAll('input[type=number], select').forEach(el => {
+  el.addEventListener('input', updateLivePanel);
+});
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  // Populate insights list
+  document.getElementById('insightsList').innerHTML = INSIGHTS.low.map(i => `<li class="mb-1">${i}</li>`).join('');
+  updateLivePanel();
+});
+</script>
+</body>
+</html>
